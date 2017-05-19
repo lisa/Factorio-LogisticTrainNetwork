@@ -1,25 +1,45 @@
-log_level = tonumber(string.sub(settings.global["ltn-interface-log-level"].value, 1, 1))
-log_output = settings.global["ltn-interface-log-output"].value
-message_filter_age = settings.global["ltn-interface-message-filter-age"].value
-min_delivery_size = settings.global["ltn-dispatcher-min-delivery-size"].value
-stop_timeout = settings.global["ltn-dispatcher-stop-timeout"].value
-delivery_timeout = settings.global["ltn-dispatcher-delivery-timeout"].value
-finish_loading = settings.global["ltn-dispatcher-finish-loading"].value
-use_Best_Effort = settings.global["ltn-dispatcher-use-best-effort"].value
-display_expected_inventory = settings.global["ltn-stop-show-expected-inventory"].value
+remote.add_interface("LTN",
+    {
+        help = function()
+            game.player.print("-----  LogisticTrainNetwork: Remote functions  -----")
+            game.player.print("|  remote.call('LTN', 'help')  - This help")
+            game.player.print("|  remote.call('LTN', 'log_level', level)  - Set Log-Level to level n.")
+            game.player.print("|     4: everything, 3: scheduler messages, 2: basic messages, 1 errors only, 0: off")
+            game.player.print("|  remote.call('LTN', 'log_output', 'console, log, both') - A set: 'console,log' or 'log' or 'console'")
+            game.player.print("|  remote.call('LTN', 'log_status') - show current log status")
+            game.player.print("")
+        end,
 
-script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-  if not event then return end
-  if event.setting == "ltn-interface-log-level" then log_level = tonumber(string.sub(settings.global["ltn-interface-log-level"].value, 1, 1)) end
-  if event.setting == "ltn-interface-log-output" then log_output = settings.global["ltn-interface-log-output"].value end
-  if event.setting == "ltn-interface-message-filter-age" then message_filter_age = settings.global["ltn-interface-message-filter-age"].value end
-  if event.setting == "ltn-dispatcher-min-delivery-size" then min_delivery_size = settings.global["ltn-dispatcher-min-delivery-size"].value end
-  if event.setting == "ltn-dispatcher-stop-timeout" then  stop_timeout = settings.global["ltn-dispatcher-stop-timeout"].value end
-  if event.setting == "ltn-dispatcher-delivery-timeout" then delivery_timeout = settings.global["ltn-dispatcher-delivery-timeout"].value end
-  if event.setting == "ltn-dispatcher-finish-loading" then finish_loading = settings.global["ltn-dispatcher-finish-loading"].value end
-  if event.setting == "ltn-dispatcher-use-best-effort" then use_Best_Effort = settings.global["ltn-dispatcher-use-best-effort"].value end
-  if event.setting == "ltn-stop-show-expected-inventory" then display_expected_inventory = settings.global["ltn-stop-show-expected-inventory"].value end
-end)
+        log_level = function(level)
+            if level == nil or type(level) ~= 'number' then
+                game.player.print("[LTN] log_level: Wrong parameter type")
+                return
+            end
+            log_level = level
+            game.player.print("[LTN] Warning! Having different log settings will cause desync. Use log_level in config.lua for MP instead.")
+            remote.call('LTN', 'log_status')
+        end,
+
+        log_output = function(log_set)
+            if log_set == nil or type(log_set) ~= 'string' then
+                game.player.print("[LTN] log_output: Wrong parameter type")
+                return
+            end
+            if log_set == "console" or log_set == "log" or log_set == "both" then
+              log_output = log_set
+              game.player.print("[LTN] Warning! Having different log settings will cause desync. Use log_level in config.lua for MP instead.")
+              remote.call('LTN', 'log_status')
+            else
+              game.player.print("[LTN] log_output: Wrong parameter "..log_set)
+              return
+            end
+        end,
+
+        log_status = function()
+            game.player.print("[LTN] <log_status> log-level: " .. log_level .. " - log-output: " .. log_output)
+        end
+    }
+)
 
 function printmsg(msg, useFilter)
   local msgKey = ""
@@ -39,10 +59,10 @@ function printmsg(msg, useFilter)
 
   -- print message
   if global.messageBuffer[msgKey] == nil or not useFilter then
-    if log_output == "console" or log_output == "console & logfile" then
+    if log_output == "console" or log_output == "both" then
       game.print(msg)
     end
-    if log_output == "logfile" or log_output == "console & logfile" then
+    if log_output == "log" or log_output == "both" then
       log("[LTN] " .. msgKey)
     end
   end
@@ -51,4 +71,4 @@ function printmsg(msg, useFilter)
   global.messageBuffer[msgKey] = global.messageBuffer[msgKey] or {tick=tick}
 end
 
-return printmsg
+return printmsg, log_output, log_level

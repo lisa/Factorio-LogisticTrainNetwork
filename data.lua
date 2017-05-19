@@ -1,6 +1,5 @@
-require ("config")
 require ("lib")
-
+require ("config")
 require ("prototypes.technology")
 require ("prototypes.recipes")
 require ("prototypes.items")

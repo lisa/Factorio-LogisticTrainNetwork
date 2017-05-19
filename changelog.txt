@@ -1,4 +1,5 @@
 1.1.3
+- fixed error when schedule is referencing non existing items 
 - fixed potential nil references in first_signal and stop ghost entities
 
 1.1.1

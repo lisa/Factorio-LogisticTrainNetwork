@@ -1325,6 +1325,8 @@ function UpdateStopOutput(trainStop)
 	if trainStop.parkedTrain and trainStop.parkedTrain.valid then
     -- get train composition
     local carriages = trainStop.parkedTrain.carriages
+    local inventory = trainStop.parkedTrain.get_contents() or {}
+
 		local carriagesDec = {}
 		if trainStop.parkedTrainFacesStop then --train faces forwards >> iterate normal
       for i=1, #carriages do
@@ -1363,7 +1365,7 @@ function UpdateStopOutput(trainStop)
               table.insert(signals, {index = index, signal = c.condition.first_signal, count = c.condition.constant + 1 })
               index = index+1
             elseif (c.condition.comparator == "=" and c.condition.constant == 0) then --train expects to be unloaded of each of this item
-              table.insert(signals, {index = index, signal = c.condition.first_signal, count = trainStop.parkedTrain.get_item_count(c.condition.first_signal.name) * -1 })
+              table.insert(signals, {index = index, signal = c.condition.first_signal, count = (inventory[c.condition.first_signal.name] or 0) * -1 })
               index = index+1
             end
           end
